@@ -2,6 +2,7 @@ package main
 
 import (
 	nbs "MetroLiving-15Minutes/nearby_search"
+	"encoding/json"
 	"log"
 	"os"
 	"path"
@@ -21,9 +22,12 @@ func main() {
 	} else {
 		log.Printf("GOOGLE_MAPS_API_KEY: %s", apiKey)
 	}
+
+	// * * 取得捷運站附近poi
+	var poiNearbyMap = make(map[string]nbs.RespData)
 	dt := isr.DT{}.From(isr.CSV{FilePath: path.Join("..", "data", "臺北捷運車站出入口座標.csv"), LoadOpts: isr.CSV_inOpts{FirstRow2ColNames: true}})
 	rowCount, _ := dt.Size()
-	for i := 0; i < rowCount; i++ {
+	for i := range rowCount {
 		lat := dt.At(i, isr.Name("緯度")).(float64)
 		lon := dt.At(i, isr.Name("經度")).(float64)
 		res, err := nbs.NearbySearch(apiKey, nbs.ReqData{
@@ -42,7 +46,12 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		poiNearbyMap[dt.At(i, isr.Name("出入口名稱")).(string)] = *res
 		log.Println(res)
 	}
-
+	b, err := json.Marshal(poiNearbyMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.WriteFile(path.Join("..", "data", "poi_nearby.json"), b, 0644)
 }
