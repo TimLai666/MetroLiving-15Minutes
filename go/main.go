@@ -31,12 +31,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_ = mapsClient
 
 	// ** 取得捷運站附近poi **
 	// getNearbyPOI(apiKey)
 
 	// ** 取得地址座標 **
-	getCoordinate(mapsClient)
+	// getCoordinate(mapsClient)
 }
 
 func getNearbyPOI(apiKey string) {
