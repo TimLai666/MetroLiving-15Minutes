@@ -23,7 +23,11 @@ func main() {
 		log.Printf("GOOGLE_MAPS_API_KEY: %s", apiKey)
 	}
 
-	// * * 取得捷運站附近poi
+	// ** 取得捷運站附近poi **
+	// getNearbyPOI(apiKey)
+}
+
+func getNearbyPOI(apiKey string) {
 	var poiNearbyMap = make(map[string]nbs.RespData)
 	dt := isr.DT{}.From(isr.CSV{FilePath: path.Join("..", "data", "臺北捷運車站出入口座標.csv"), LoadOpts: isr.CSV_inOpts{FirstRow2ColNames: true}})
 	rowCount, _ := dt.Size()

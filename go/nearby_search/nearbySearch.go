@@ -30,9 +30,12 @@ type RespData struct {
 	Places []Place `json:"places"`
 }
 
-// Place 表示單一地點
+// Place 表示單一地點的資訊
 type Place struct {
-	DisplayName DisplayName `json:"displayName"`
+	Types            []string    `json:"types"`
+	FormattedAddress string      `json:"formattedAddress"`
+	WebsiteUri       string      `json:"websiteUri"`
+	DisplayName      DisplayName `json:"displayName"`
 }
 
 // DisplayName 表示顯示名稱資訊
@@ -54,7 +57,7 @@ func NearbySearch(apiKey string, reqData ReqData) (responseData *RespData, err e
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Goog-Api-Key", apiKey)
-	req.Header.Set("X-Goog-FieldMask", "places.displayName")
+	req.Header.Set("X-Goog-FieldMask", "places.displayName,places.formattedAddress,places.types,places.websiteUri")
 
 	client := &http.Client{}
 	res, err := client.Do(req)
