@@ -1,10 +1,12 @@
 package main
 
 import (
-	nearbysearch "MetroLiving-15Minutes/nearby_search"
+	nbs "MetroLiving-15Minutes/nearby_search"
 	"log"
 	"os"
+	"path"
 
+	"github.com/HazelnutParadise/insyra/isr"
 	"github.com/joho/godotenv"
 )
 
@@ -19,21 +21,28 @@ func main() {
 	} else {
 		log.Printf("GOOGLE_MAPS_API_KEY: %s", apiKey)
 	}
-	res, err := nearbysearch.NearbySearch(apiKey, nearbysearch.ReqData{
-		IncludedTypes:  "restaurant",
-		MaxResultCount: 20,
-		LocationRestriction: nearbysearch.LocationRestriction{
-			Circle: nearbysearch.Circle{
-				Center: nearbysearch.Center{
-					Latitude:  37.422057,
-					Longitude: -122.08427,
+	dt := isr.DT{}.From(isr.CSV{FilePath: path.Join("..", "data", "臺北捷運車站出入口座標.csv"), LoadOpts: isr.CSV_inOpts{FirstRow2ColNames: true}})
+	rowCount, _ := dt.Size()
+	for i := 0; i < rowCount; i++ {
+		lat := dt.At(i, isr.Name("緯度")).(float64)
+		lon := dt.At(i, isr.Name("經度")).(float64)
+		res, err := nbs.NearbySearch(apiKey, nbs.ReqData{
+			IncludedTypes:  "restaurant",
+			MaxResultCount: 20,
+			LocationRestriction: nbs.LocationRestriction{
+				Circle: nbs.Circle{
+					Center: nbs.Center{
+						Latitude:  lat,
+						Longitude: lon,
+					},
+					Radius: 1000,
 				},
-				Radius: 1000,
 			},
-		},
-	})
-	if err != nil {
-		log.Fatal(err)
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println(res)
 	}
-	log.Println(res)
+
 }
