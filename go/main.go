@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/HazelnutParadise/Go-Utils/asyncutil"
 	"github.com/HazelnutParadise/insyra/isr"
 	"github.com/joho/godotenv"
 	"googlemaps.github.io/maps"
@@ -79,8 +80,8 @@ func getNearbyPOI(apiKey string) {
 	var poiNearbyMap = make(map[string]map[string]any)
 	dt := isr.DT{}.From(isr.CSV{FilePath: path.Join("..", "data", "臺北捷運車站出入口座標.csv"), LoadOpts: isr.CSV_inOpts{FirstRow2ColNames: true}})
 	rowCount, _ := dt.Size()
-	for i := range rowCount {
-		for _, poiType := range POI_TYPE_TO_GET {
+	asyncutil.ParallelForEach(POI_TYPE_TO_GET, func(poiType string) {
+		asyncutil.ParallelForEach(rowCount, func(i int) {
 			lat := dt.At(i, isr.Name("緯度")).(float64)
 			lng := dt.At(i, isr.Name("經度")).(float64)
 			res, err := nbs.NearbySearch(apiKey, nbs.ReqData{
@@ -101,14 +102,13 @@ func getNearbyPOI(apiKey string) {
 			}
 			poiNearbyMap[dt.At(i, isr.Name("出入口名稱")).(string)] = res
 			log.Println(res)
-
-			b, err := json.Marshal(poiNearbyMap)
-			if err != nil {
-				log.Fatal(err)
-			}
-			os.WriteFile(path.Join("..", "data", fmt.Sprintf("%s_poi_nearby.json", poiType)), b, 0644)
+		})
+		b, err := json.Marshal(poiNearbyMap)
+		if err != nil {
+			log.Fatal(err)
 		}
-	}
+		os.WriteFile(path.Join("..", "data", fmt.Sprintf("%s_poi_nearby.json", poiType)), b, 0644)
+	})
 }
 
 func getPOICoordinate(mapsClient *maps.Client) {
