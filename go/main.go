@@ -19,6 +19,21 @@ func init() {
 	godotenv.Load(".env")
 }
 
+type PlaceWithCoordinate struct {
+	Place nbs.Place `json:"place"`
+	Lat   float64   `json:"lat"`
+	Lng   float64   `json:"lng"`
+}
+
+type PlaceFlatten struct {
+	Types            string  `json:"types"`
+	FormattedAddress string  `json:"formattedAddress"`
+	WebsiteUri       string  `json:"websiteUri"`
+	Name             string  `json:"name"`
+	Lat              float64 `json:"lat"`
+	Lng              float64 `json:"lng"`
+}
+
 func main() {
 	apiKey := os.Getenv("GOOGLE_MAPS_API_KEY")
 	if apiKey == "" {
@@ -37,7 +52,10 @@ func main() {
 	// getNearbyPOI(apiKey)
 
 	// ** 取得地址座標 **
-	// getCoordinate(mapsClient)
+	// getPOICoordinate(mapsClient)
+
+	// ** 將poi_nearby_per_station_exit資料夾下的json檔案進行扁平化 **
+	flattenPOIJson()
 }
 
 func getNearbyPOI(apiKey string) {
@@ -73,7 +91,7 @@ func getNearbyPOI(apiKey string) {
 	os.WriteFile(path.Join("..", "data", "poi_nearby.json"), b, 0644)
 }
 
-func getCoordinate(mapsClient *maps.Client) {
+func getPOICoordinate(mapsClient *maps.Client) {
 	poiNearbyJson, err := os.ReadFile(path.Join("..", "data", "poi_nearby.json"))
 	if err != nil {
 		log.Fatal(err)
@@ -81,11 +99,6 @@ func getCoordinate(mapsClient *maps.Client) {
 	var poiNearbyMap = make(map[string]nbs.RespData)
 	json.Unmarshal(poiNearbyJson, &poiNearbyMap)
 
-	type PlaceWithCoordinate struct {
-		Place nbs.Place `json:"place"`
-		Lat   float64   `json:"lat"`
-		Lng   float64   `json:"lng"`
-	}
 	var placeWithCoordinateMap = make(map[string][]PlaceWithCoordinate)
 
 	for k, v := range poiNearbyMap {
@@ -108,6 +121,50 @@ func getCoordinate(mapsClient *maps.Client) {
 		}
 		filename := strings.ReplaceAll(k, "/", "_")
 		err = os.WriteFile(path.Join("..", "data", "poi_nearby_per_station_exit", filename+".json"), jsonData, 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func flattenPOIJson() {
+	dir, err := os.ReadDir(path.Join("..", "data", "poi_nearby_per_station_exit"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, entry := range dir {
+		if entry.IsDir() {
+			continue
+		}
+		filename := entry.Name()
+		if !strings.HasSuffix(filename, ".json") {
+			continue
+		}
+		file, err := os.ReadFile(path.Join("..", "data", "poi_nearby_per_station_exit", filename))
+		if err != nil {
+			log.Fatal(err)
+		}
+		var placeWithCoordinateMap = make([]PlaceWithCoordinate, 0)
+		var placeWithCoordinateMapFlatten = make([]PlaceFlatten, 0)
+		json.Unmarshal(file, &placeWithCoordinateMap)
+
+		for _, p := range placeWithCoordinateMap {
+			pf := PlaceFlatten{
+				Types:            strings.Join(p.Place.Types, ","),
+				FormattedAddress: p.Place.FormattedAddress,
+				WebsiteUri:       p.Place.WebsiteUri,
+				Name:             p.Place.DisplayName.Text,
+				Lat:              p.Lat,
+				Lng:              p.Lng,
+			}
+			placeWithCoordinateMapFlatten = append(placeWithCoordinateMapFlatten, pf)
+		}
+
+		jsonData, err := json.Marshal(placeWithCoordinateMapFlatten)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = os.WriteFile(path.Join("..", "data", "poi_nearby_per_station_exit_flatten", filename), jsonData, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
