@@ -44,7 +44,7 @@ type DisplayName struct {
 	Text         string `json:"text"`
 }
 
-func NearbySearch(apiKey string, reqData ReqData) (responseData *RespData, err error) {
+func NearbySearch(apiKey string, reqData ReqData) (responseData map[string]any, err error) {
 	var jsonData []byte
 	jsonData, err = json.Marshal(reqData)
 	if err != nil {
@@ -57,7 +57,7 @@ func NearbySearch(apiKey string, reqData ReqData) (responseData *RespData, err e
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Goog-Api-Key", apiKey)
-	req.Header.Set("X-Goog-FieldMask", "places.displayName,places.formattedAddress,places.types,places.websiteUri")
+	req.Header.Set("X-Goog-FieldMask", "*")
 
 	client := &http.Client{}
 	res, err := client.Do(req)

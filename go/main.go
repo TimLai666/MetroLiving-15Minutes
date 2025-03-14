@@ -66,46 +66,49 @@ func main() {
 	_ = mapsClient
 
 	// ** 取得捷運站附近poi **
-	// getNearbyPOI(apiKey)
+	getNearbyPOI(apiKey)
 
 	// ** 取得地址座標 **
 	// getPOICoordinate(mapsClient)
 
 	// ** 將poi_nearby_per_station_exit資料夾下的json檔案進行扁平化 **
-	flattenPOIJson()
+	// flattenPOIJson()
 }
 
 func getNearbyPOI(apiKey string) {
-	var poiNearbyMap = make(map[string]nbs.RespData)
+	var poiNearbyMap = make(map[string]map[string]any)
 	dt := isr.DT{}.From(isr.CSV{FilePath: path.Join("..", "data", "臺北捷運車站出入口座標.csv"), LoadOpts: isr.CSV_inOpts{FirstRow2ColNames: true}})
 	rowCount, _ := dt.Size()
 	for i := range rowCount {
-		lat := dt.At(i, isr.Name("緯度")).(float64)
-		lng := dt.At(i, isr.Name("經度")).(float64)
-		res, err := nbs.NearbySearch(apiKey, nbs.ReqData{
-			IncludedTypes:  "restaurant",
-			MaxResultCount: 20,
-			LocationRestriction: nbs.LocationRestriction{
-				Circle: nbs.Circle{
-					Center: nbs.Center{
-						Latitude:  lat,
-						Longitude: lng,
+		for _, poiType := range POI_TYPE_TO_GET {
+			lat := dt.At(i, isr.Name("緯度")).(float64)
+			lng := dt.At(i, isr.Name("經度")).(float64)
+			res, err := nbs.NearbySearch(apiKey, nbs.ReqData{
+				IncludedTypes:  poiType,
+				MaxResultCount: 20,
+				LocationRestriction: nbs.LocationRestriction{
+					Circle: nbs.Circle{
+						Center: nbs.Center{
+							Latitude:  lat,
+							Longitude: lng,
+						},
+						Radius: 1000,
 					},
-					Radius: 1000,
 				},
-			},
-		})
-		if err != nil {
-			log.Fatal(err)
+			})
+			if err != nil {
+				log.Fatal(err)
+			}
+			poiNearbyMap[dt.At(i, isr.Name("出入口名稱")).(string)] = res
+			log.Println(res)
+
+			b, err := json.Marshal(poiNearbyMap)
+			if err != nil {
+				log.Fatal(err)
+			}
+			os.WriteFile(path.Join("..", "data", fmt.Sprintf("%s_poi_nearby.json", poiType)), b, 0644)
 		}
-		poiNearbyMap[dt.At(i, isr.Name("出入口名稱")).(string)] = *res
-		log.Println(res)
 	}
-	b, err := json.Marshal(poiNearbyMap)
-	if err != nil {
-		log.Fatal(err)
-	}
-	os.WriteFile(path.Join("..", "data", "poi_nearby.json"), b, 0644)
 }
 
 func getPOICoordinate(mapsClient *maps.Client) {
