@@ -4,6 +4,8 @@ github.com/HazelnutParadise/Go-Utils v0.7.10 h1:d4T36Kea1VRpqbasORZ8uZEQLsF1hnyA
 github.com/HazelnutParadise/Go-Utils v0.7.10/go.mod h1:JzuH5U+UNgAQzzotFf6k4zoJiOkBPyWPK7JTJrheYas=
 github.com/HazelnutParadise/Go-Utils v0.8.0 h1:SU9CgigIkcOSUUQzMMjlNKeUg51MxJk+aUcBkRMar+M=
 github.com/HazelnutParadise/Go-Utils v0.8.0/go.mod h1:TR4d00qeSIL20jAuljAtgrZ27645d8ui1hu9txyyHow=
+github.com/HazelnutParadise/Go-Utils v0.8.1 h1:ctlHYaHchNwpKA+1LkjJJxhLWXkjjqg7lMjzj7VM9U8=
+github.com/HazelnutParadise/Go-Utils v0.8.1/go.mod h1:TR4d00qeSIL20jAuljAtgrZ27645d8ui1hu9txyyHow=
 github.com/HazelnutParadise/insyra v0.1.5 h1:iFMZsEpv3XacLyMhaC7jgfNIhiy+mM55Faatc50rzew=
 github.com/HazelnutParadise/insyra v0.1.5/go.mod h1:0unUNmzceIrLdMmE1iovyWdRocJhB9bLmxJDtTsbeb8=
 github.com/HazelnutParadise/insyra v0.1.6 h1:AJE3MGHi84qGMgNuj2mMyIFBhtqfroB8ELGtXoIczNM=

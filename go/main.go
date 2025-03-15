@@ -9,8 +9,8 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
-	"github.com/HazelnutParadise/Go-Utils/asyncutil"
 	"github.com/HazelnutParadise/insyra/isr"
 	"github.com/joho/godotenv"
 	"googlemaps.github.io/maps"
@@ -35,13 +35,13 @@ type PlaceFlatten struct {
 	Lng              float64 `json:"lng"`
 }
 
-var POI_TYPE_TO_GET = []string{
-	"accounting", "airport", "amusement_park", "aquarium", "art_gallery", "atm", "bakery", "bank",
-	"bar", "beauty_salon", "bicycle_store", "book_store", "bowling_alley", "bus_station", "cafe",
-	"campground", "car_dealer", "car_rental", "car_repair", "car_wash", "casino", "cemetery", "church",
+var POI_TYPE_TO_GET = /*[]string{
+"accounting", "airport", "amusement_park", "aquarium", "art_gallery", "atm", "bakery", "bank",
+"bar", "beauty_salon", "bicycle_store", "book_store", "bowling_alley", "bus_station", "cafe",
+"campground", "car_dealer", "car_rental", "car_repair", "car_wash", "casino", "cemetery", "church",
 	"city_hall", "clothing_store", "convenience_store", "courthouse", "dentist", "department_store",
 	"doctor", "drugstore", "electrician", "electronics_store", "embassy", "fire_station", "florist",
-	"funeral_home", "furniture_store", "gas_station", "gym", "hair_care", "hardware_store", "hindu_temple",
+	"funeral_home", "furniture_store", "gas_station", "gym", "hair_care", "hardware_store", "hindu_temple",*/[]string{
 	"home_goods_store", "hospital", "insurance_agency", "jewelry_store", "laundry", "lawyer", "library",
 	"light_rail_station", "liquor_store", "local_government_office", "locksmith", "lodging", "meal_delivery",
 	"meal_takeaway", "mosque", "movie_rental", "movie_theater", "moving_company", "museum", "night_club",
@@ -80,8 +80,8 @@ func getNearbyPOI(apiKey string) {
 	var poiNearbyMap = make(map[string]map[string]any)
 	dt := isr.DT{}.From(isr.CSV{FilePath: path.Join("..", "data", "臺北捷運車站出入口座標.csv"), LoadOpts: isr.CSV_inOpts{FirstRow2ColNames: true}})
 	rowCount, _ := dt.Size()
-	asyncutil.ParallelForEach(POI_TYPE_TO_GET, func(poiType string) {
-		asyncutil.ParallelForEach(rowCount, func(i int) {
+	for _, poiType := range POI_TYPE_TO_GET {
+		for i := range rowCount {
 			lat := dt.At(i, isr.Name("緯度")).(float64)
 			lng := dt.At(i, isr.Name("經度")).(float64)
 			res, err := nbs.NearbySearch(apiKey, nbs.ReqData{
@@ -102,13 +102,15 @@ func getNearbyPOI(apiKey string) {
 			}
 			poiNearbyMap[dt.At(i, isr.Name("出入口名稱")).(string)] = res
 			log.Println(res)
-		})
+			time.Sleep(200 * time.Millisecond)
+		}
 		b, err := json.Marshal(poiNearbyMap)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			continue
 		}
-		os.WriteFile(path.Join("..", "data", fmt.Sprintf("%s_poi_nearby.json", poiType)), b, 0644)
-	})
+		os.WriteFile(path.Join("..", "data", "poi_json_raw", fmt.Sprintf("%s_poi_nearby.json", poiType)), b, 0644)
+	}
 }
 
 func getPOICoordinate(mapsClient *maps.Client) {
